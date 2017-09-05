@@ -94,6 +94,10 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+void sortingNetwork(){
+	_mm_min_ps( A, C);
+
+}
 
 void readFile(int fileLength, File *nameOfFile, float *Repository){
 	Repository = (float *) malloc(fileLength*sizeof(float));
