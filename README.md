@@ -11,5 +11,7 @@
 ## Técnicas
 - Merge Bitónico a nivel SIMD para ordenar subsecuencias y luego Merge a nivel de proceso para mezclar subsecuencias y obtener la secuencia ordenada. 
 
-## Comandos útiles
-- _m128 R; // 4 x 32-bits floats,
+## Compilación
+- Mediante MakeFile
+
+- $ gcc -msse3 -o simdsort simdsort.c $
