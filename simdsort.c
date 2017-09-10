@@ -69,7 +69,7 @@ int main(int argc, char * const argv[])
 		}
 
 	FILE *entrada = fopen(archivo_entrada,"r");
-	lista = readNumFile(f,cantidadElementos);
+	lista = readNumFile(entrada,cantidadElementos);
 	fclose(entrada);
 	listaOrdenada = ordenamiento_secuencias_tamano_16(lista,cantidadElementos);
 	if(isdebug){
@@ -97,7 +97,7 @@ void red_ordenamiento(float * listaNumeros, int up){
 	registerB = _mm_shuffle_ps(registerA, registerA, _MM_SHUFFLE(1,0,3,2));
 	registerD = _mm_min_ps(registerB,registerA);
 	registerE = _mm_max_ps(registerB,registerA);
-	if(!up)//Se comprueba flag para determinar orden a entregar 
+	if(up)//Se comprueba flag para determinar orden a entregar 
 		registerA = _mm_shuffle_ps(registerE, registerD, _MM_SHUFFLE(3,2,1,0));
 	else
 		registerA = _mm_shuffle_ps(registerD, registerE, _MM_SHUFFLE(3,2,1,0));
@@ -107,7 +107,7 @@ void red_ordenamiento(float * listaNumeros, int up){
 	registerC = _mm_shuffle_ps(registerA, registerA, _MM_SHUFFLE(2,0,3,1));
 	registerD = _mm_min_ps(registerB,registerC);
 	registerE = _mm_max_ps(registerB,registerC);	
-	if(!up)//Se comprueba flag para determinar orden a entregar. 
+	if(up)//Se comprueba flag para determinar orden a entregar. 
 		registerA = _mm_shuffle_ps(registerE, registerD, _MM_SHUFFLE(3,2,1,0));
 	else
 		registerA = _mm_shuffle_ps(registerD, registerE, _MM_SHUFFLE(3,2,1,0));
@@ -119,7 +119,7 @@ void red_ordenamiento(float * listaNumeros, int up){
 	registerB = _mm_shuffle_ps(registerA, registerA, _MM_SHUFFLE(3,1,2,0));
 	registerD = _mm_min_ps(registerB,registerA);
 	registerE = _mm_max_ps(registerB,registerA);
-	if(!up)//Se comprueba flag para determinar orden a entregar. 
+	if(up)//Se comprueba flag para determinar orden a entregar. 
 		registerA = _mm_shuffle_ps(registerE, registerD, _MM_SHUFFLE(3,2,1,0));
 	else
 		registerA = _mm_shuffle_ps(registerD, registerE, _MM_SHUFFLE(3,2,1,0));
@@ -130,13 +130,13 @@ void red_ordenamiento(float * listaNumeros, int up){
 
 void red_ordenamiento_bitonica(float* listA, float* listB){
 
-	__m128d registerB, registerC, registerD, registerE, registerF, registerG, registerH, registerI, registerJ, registerJ;
+	__m128d registerB, registerC, registerD, registerE, registerF, registerG, registerH, registerI, registerJ, registerK;
 	/** 
 	**** Ordenamiento necesario para poder operar correctamente la merge network bitonica
 	**** Se genera las secuencias bitonicas
 	**/
-	red_ordenamiento(listA,1);
-	red_ordenamiento(listB,0);
+	red_ordenamiento(listA,0);
+	red_ordenamiento(listB,1);
 	registerB = _mm_load_ps(listA);
 	registerC = _mm_load_ps(listB);
 
@@ -150,9 +150,9 @@ void red_ordenamiento_bitonica(float* listA, float* listB){
 	registerG = _mm_min_ps(registerF,registerD);
 	registerJ = _mm_min_ps(registerI,registerE);
 	registerH = _mm_max_ps(registerF,registerD);
-	registerJ = _mm_max_ps(registerI,registerE);
+	registerK = _mm_max_ps(registerI,registerE);
 	registerB = _mm_shuffle_ps(registerG, registerH, _MM_SHUFFLE(3,2,1,0));
-	registerC = _mm_shuffle_ps(registerJ, registerJ, _MM_SHUFFLE(3,2,1,0));
+	registerC = _mm_shuffle_ps(registerJ, registerK, _MM_SHUFFLE(3,2,1,0));
 	registerB = _mm_shuffle_ps(registerB,registerB,_MM_SHUFFLE(3,1,2,0));
 	registerC = _mm_shuffle_ps(registerC,registerC,_MM_SHUFFLE(3,1,2,0));
 
@@ -164,9 +164,9 @@ void red_ordenamiento_bitonica(float* listA, float* listB){
 	registerG = _mm_min_ps(registerF,registerB);
 	registerJ = _mm_min_ps(registerI,registerC);
 	registerH = _mm_max_ps(registerF,registerB);
-	registerJ = _mm_max_ps(registerI,registerC);
+	registerK = _mm_max_ps(registerI,registerC);
 	registerB = _mm_shuffle_ps(registerG, registerH, _MM_SHUFFLE(3,2,1,0));
-	registerC = _mm_shuffle_ps(registerJ, registerJ, _MM_SHUFFLE(3,2,1,0));
+	registerC = _mm_shuffle_ps(registerJ, registerK, _MM_SHUFFLE(3,2,1,0));
 
 	/** 
 	**** Ultimo bloque de combinatoria min-max-shuffle
@@ -178,17 +178,17 @@ void red_ordenamiento_bitonica(float* listA, float* listB){
 	registerG = _mm_min_ps(registerF,registerD);
 	registerJ = _mm_min_ps(registerI,registerE);
 	registerH = _mm_max_ps(registerF,registerD);
-	registerJ = _mm_max_ps(registerI,registerE);
+	registerK = _mm_max_ps(registerI,registerE);
 	registerB = _mm_shuffle_ps(registerG, registerH, _MM_SHUFFLE(3,2,1,0));
-	registerC = _mm_shuffle_ps(registerJ, registerJ, _MM_SHUFFLE(3,2,1,0));
+	registerC = _mm_shuffle_ps(registerJ, registerK, _MM_SHUFFLE(3,2,1,0));
 	registerB = _mm_shuffle_ps(registerB,registerB,_MM_SHUFFLE(3,1,2,0));
 	registerC = _mm_shuffle_ps(registerC,registerC,_MM_SHUFFLE(3,1,2,0));
 
 	/** 
 	**** Almacenaje de resultado
 	**/
-	_mm_store_ps(a,registerB);
-	_mm_store_ps(b,registerC);
+	_mm_store_ps(listA,registerB);
+	_mm_store_ps(listB,registerC);
 }
 
 /**
@@ -215,9 +215,10 @@ float* ordenamiento_secuencias_tamano_16(float* lista_numerica, int tamano){
 	}
 
 	listado* listasProcesadas = (listado*) malloc(sizeof(listado)*tamano/16);
+	listado* flecha;
 	float* listado = (float*) malloc(sizeof(float)*tamano);
 	int i,j,checklist;
-	listado* punteroLista;
+	
 
 	for(i=0;i<tamano/16;i++) {
 		fusion_SIMD_secuencias_numericas(&lista_numerica[16*i]);
@@ -226,19 +227,19 @@ float* ordenamiento_secuencias_tamano_16(float* lista_numerica, int tamano){
 	}
 	//Se realiza Merge necesario
 	j=0;
-	for(checklist=0;checklist<tamano/16;)
+	for(checklist=0; checklist< tamano/16;)
 	{
-		punteroLista=NULL;
+		flecha=NULL;
 		for(i=0;i<tamano/16;i++){
 			if(listasProcesadas[i].indice==16) continue;
-			if(punteroLista==NULL)
-				punteroLista = &listasProcesadas[i];
-			if(punteroLista->array_numeros[punteroLista->indice]>listasProcesadas[i].array_numeros[listasProcesadas[i].indice])
-				punteroLista = &listasProcesadas[i];
+			if(flecha==NULL)
+				flecha = &listasProcesadas[i];
+			if(flecha->array_numeros[flecha->indice]>listasProcesadas[i].array_numeros[listasProcesadas[i].indice])
+				flecha = &listasProcesadas[i];
 		}
-		listado[j]=punteroLista->array_numeros[punteroLista->indice];
-		punteroLista->indice++;
-		if(punteroLista->indice==16)
+		listado[j]=flecha->array_numeros[flecha->indice];
+		flecha->indice++;
+		if(flecha->indice==16)
 			checklist++;
 		j++;
 	}
@@ -247,7 +248,7 @@ float* ordenamiento_secuencias_tamano_16(float* lista_numerica, int tamano){
 
 float* readNumFile(FILE* archivo, int tamano){
 	float* elementos;
-	posix_memalign((void **) &elementos, 16, tamanoof(float)*tamano);
+	posix_memalign((void **) &elementos, 16, sizeof(float)*tamano);
 	fread(elementos, tamano, sizeof(float), archivo);
 	return elementos;
 }
